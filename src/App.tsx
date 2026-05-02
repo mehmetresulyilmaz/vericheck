@@ -69,7 +69,19 @@ const translations = {
       scanning: "Deep Engine Scan",
       checking: "Analyzing site architecture and content flow...",
       verifying: "Verifying syntactic patterns...",
-      reports: "Reports"
+      reports: "Reports",
+      params: {
+        syntactic: "Linguistic Patterns",
+        semantic: "Semantic Flow",
+        syntid: "SyntID Watermark",
+        entropy: "Structural Variance"
+      },
+      descriptions: {
+        syntactic: "Detects rigid sentence structure and AI-specific word patterns.",
+        semantic: "Measures logical continuity and conversational entropy.",
+        syntid: "Identifies invisible machine-generated digital fingerprints.",
+        entropy: "Evaluates the natural complexity often lacking in synthetic text."
+      }
     },
     verdicts: {
       human: "Human Produced",
@@ -125,7 +137,19 @@ const translations = {
       scanning: "Derin Motor Taraması",
       checking: "Site mimarisi ve içerik akışı analiz ediliyor...",
       verifying: "Sözdizimsel desenler doğrulanıyor...",
-      reports: "Raporlar"
+      reports: "Raporlar",
+      params: {
+        syntactic: "Dilsel Kalıplar",
+        semantic: "Anlamsal Akış",
+        syntid: "SyntID Filigranı",
+        entropy: "Yapısal Varyans"
+      },
+      descriptions: {
+        syntactic: "Rijit cümle yapısını ve YZ'ye özgü kelime kalıplarını tespit eder.",
+        semantic: "Mantıksal devamlılığı ve konuşma entropisini ölçer.",
+        syntid: "Görünmez makine yapımı dijital parmak izlerini tanımlar.",
+        entropy: "Sentetik metinlerde genellikle eksik olan doğal karmaşıklığı değerlendirir."
+      }
     },
     verdicts: {
       human: "İnsan Yapımı",
@@ -619,10 +643,10 @@ export default function App() {
 
                 <div className="space-y-6">
                   {[
-                    { label: 'Syntactic Pattern Detection', val: params?.syntactic, desc: 'Checks for rigid sentence structure and AI-specific word choice.' },
-                    { label: 'Semantic Consistency', val: params?.semantic, desc: 'Measures logical flow and conversational entropy.' },
-                    { label: 'SyntID Watermark Analysis', val: params?.syntid, desc: 'Detects invisible machine-generated fingerprints.' },
-                    { label: 'Entropy Variance', val: params?.entropy, desc: 'Evaluates the natural irregularity of human writing.' }
+                    { key: 'syntactic', label: t.results.params.syntactic, val: params?.syntactic, desc: t.results.descriptions.syntactic },
+                    { key: 'semantic', label: t.results.params.semantic, val: params?.semantic, desc: t.results.descriptions.semantic },
+                    { key: 'syntid', label: t.results.params.syntid, val: params?.syntid, desc: t.results.descriptions.syntid },
+                    { key: 'entropy', label: t.results.params.entropy, val: params?.entropy, desc: t.results.descriptions.entropy }
                   ].map((p, i) => (
                     <div key={i} className="space-y-2">
                        <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
@@ -633,7 +657,8 @@ export default function App() {
                          <motion.div 
                            initial={{ width: 0 }}
                            animate={{ width: `${p.val}%` }}
-                           className={cn("h-full", p.val > 50 ? "bg-red-500" : "bg-emerald-500")}
+                           transition={{ duration: 1, ease: "easeOut" }}
+                           className={cn("h-full transition-all", p.val > 50 ? "bg-red-500" : "bg-emerald-500")}
                          />
                        </div>
                        <p className="text-[10px] text-[var(--muted)]">{p.desc}</p>
