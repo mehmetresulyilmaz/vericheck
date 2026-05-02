@@ -549,15 +549,15 @@ export default function App() {
                         <h4 className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{t.results.details}</h4>
                         <div className="space-y-2">
                            <div className="flex items-center justify-between py-2 border-b border-[var(--border)]">
-                              <span className="text-sm font-medium">Syntactic Analysis</span>
-                              <span className={cn("text-xs font-bold", params?.syntactic > 50 ? "text-red-500" : "text-emerald-500")}>
-                                {params?.syntactic > 50 ? "AI PATTERN" : "NATURAL"}
+                              <span className="text-sm font-medium">Linguistic Patterns</span>
+                              <span className={cn("text-xs font-bold", params?.syntactic > 45 ? "text-red-500" : "text-emerald-500")}>
+                                {params?.syntactic > 45 ? "AI DETECTED" : "NATURAL"}
                               </span>
                            </div>
                            <div className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0">
-                              <span className="text-sm font-medium">SyntID Verification</span>
+                              <span className="text-sm font-medium">SyntID Marking</span>
                               <span className={cn("text-xs font-bold", params?.syntid > 50 ? "text-red-500 animate-pulse" : "text-[var(--muted)]")}>
-                                {params?.syntid > 50 ? "WATERMARK DETECTED" : "NO WATERMARK"}
+                                {params?.syntid > 50 ? "WATERMARK FOUND" : "CLEAR"}
                               </span>
                            </div>
                         </div>
@@ -566,9 +566,9 @@ export default function App() {
 
                     <button 
                       onClick={() => setShowReport(true)}
-                      className="btn-secondary w-full gap-2 mt-8 transition-all active:scale-[0.98]"
+                      className="h-14 w-full rounded-2xl border border-[var(--border)] hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-all font-bold flex items-center justify-center gap-2 group mt-8"
                     >
-                       {t.results.details} {t.results.reports} <ExternalLink className="w-3 h-3" />
+                       {t.results.details} {t.results.reports} <ExternalLink className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </motion.div>
                 )}
