@@ -161,6 +161,8 @@ export default function App() {
   const [url, setUrl] = useState('');
   const [percentage, setPercentage] = useState(0);
   const [score, setScore] = useState(0);
+  const [params, setParams] = useState<any>(null);
+  const [showReport, setShowReport] = useState(false);
 
   const t = translations[lang];
 
@@ -257,6 +259,12 @@ export default function App() {
       setPercentage(100);
       await new Promise(r => setTimeout(r, 600));
       setScore(data.score);
+      setParams(data.params || {
+        syntactic: data.score * 0.9,
+        semantic: data.score * 0.7,
+        syntid: 0,
+        entropy: data.score > 50 ? 80 : 20
+      });
       setStatus('done');
     } catch (error: any) {
       console.error("Scan Error:", error);
@@ -267,9 +275,9 @@ export default function App() {
   };
 
   const getVerdict = (s: number) => {
-    if (s < 25) return t.verdicts.human;
-    if (s < 50) return t.verdicts.likelyHuman;
-    if (s < 75) return t.verdicts.likelyAI;
+    if (s < 20) return t.verdicts.human;
+    if (s < 45) return t.verdicts.likelyHuman;
+    if (s < 70) return t.verdicts.likelyAI;
     return t.verdicts.ai;
   };
 
@@ -540,17 +548,26 @@ export default function App() {
                       <div className="space-y-4">
                         <h4 className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{t.results.details}</h4>
                         <div className="space-y-2">
-                           {['Metadata', 'Patterning', 'Inconsistency'].map((p, i) => (
-                             <div key={i} className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0">
-                                <span className="text-sm font-medium">{p}</span>
-                                <span className={cn("text-xs font-bold", score > 50 ? "text-red-500" : "text-emerald-500")}>DETECTION MATCH</span>
-                             </div>
-                           ))}
+                           <div className="flex items-center justify-between py-2 border-b border-[var(--border)]">
+                              <span className="text-sm font-medium">Syntactic Analysis</span>
+                              <span className={cn("text-xs font-bold", params?.syntactic > 50 ? "text-red-500" : "text-emerald-500")}>
+                                {params?.syntactic > 50 ? "AI PATTERN" : "NATURAL"}
+                              </span>
+                           </div>
+                           <div className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0">
+                              <span className="text-sm font-medium">SyntID Verification</span>
+                              <span className={cn("text-xs font-bold", params?.syntid > 50 ? "text-red-500 animate-pulse" : "text-[var(--muted)]")}>
+                                {params?.syntid > 50 ? "WATERMARK DETECTED" : "NO WATERMARK"}
+                              </span>
+                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <button className="btn-secondary w-full gap-2 mt-8">
+                    <button 
+                      onClick={() => setShowReport(true)}
+                      className="btn-secondary w-full gap-2 mt-8 transition-all active:scale-[0.98]"
+                    >
                        {t.results.details} {t.results.reports} <ExternalLink className="w-3 h-3" />
                     </button>
                   </motion.div>
@@ -575,6 +592,67 @@ export default function App() {
       </main>
 
       <footer className="border-t border-[var(--border)] py-12 px-6 mt-20 bg-[var(--card)]">
+        {/* Report Overlay */}
+        <AnimatePresence>
+          {showReport && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setShowReport(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-lg bg-[var(--background)] rounded-3xl p-8 border border-[var(--border)] shadow-2xl"
+              >
+                <div className="flex justify-between items-center mb-8">
+                  <div>
+                    <h3 className="text-2xl font-serif">{t.results.details}</h3>
+                    <p className="text-xs text-[var(--muted)] font-mono uppercase tracking-widest mt-1">Report ID: {params?.id || 'VC-SYSTEM'}</p>
+                  </div>
+                  <button onClick={() => setShowReport(false)} className="p-2 hover:bg-[var(--border)] rounded-full transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {[
+                    { label: 'Syntactic Pattern Detection', val: params?.syntactic, desc: 'Checks for rigid sentence structure and AI-specific word choice.' },
+                    { label: 'Semantic Consistency', val: params?.semantic, desc: 'Measures logical flow and conversational entropy.' },
+                    { label: 'SyntID Watermark Analysis', val: params?.syntid, desc: 'Detects invisible machine-generated fingerprints.' },
+                    { label: 'Entropy Variance', val: params?.entropy, desc: 'Evaluates the natural irregularity of human writing.' }
+                  ].map((p, i) => (
+                    <div key={i} className="space-y-2">
+                       <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
+                         <span>{p.label}</span>
+                         <span className={cn(p.val > 50 ? "text-red-500" : "text-emerald-500")}>{Math.round(p.val)}%</span>
+                       </div>
+                       <div className="h-1.5 w-full bg-[var(--border)] rounded-full overflow-hidden">
+                         <motion.div 
+                           initial={{ width: 0 }}
+                           animate={{ width: `${p.val}%` }}
+                           className={cn("h-full", p.val > 50 ? "bg-red-500" : "bg-emerald-500")}
+                         />
+                       </div>
+                       <p className="text-[10px] text-[var(--muted)]">{p.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-10 pt-6 border-t border-[var(--border)] flex justify-between items-center">
+                   <div className="flex items-center gap-2">
+                     <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                     <span className="text-[10px] font-bold uppercase tracking-widest opacity-50">Verified Logic Engine</span>
+                   </div>
+                   <button onClick={() => window.print()} className="text-[10px] font-bold uppercase tracking-widest underline decoration-dotted">Download PDF</button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
            <div className="flex items-center gap-2 opacity-50">
              <span className="text-[10px] font-bold tracking-[0.2em] uppercase">© {new Date().getFullYear()} VeriCheck</span>

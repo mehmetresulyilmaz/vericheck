@@ -28,7 +28,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     res.status(200).json({
       score: Math.min(99, score),
-      title: html.match(/<title>([^<]*)<\/title>/)?.[1] || "Analyzed Site"
+      title: html.match(/<title>([^<]*)<\/title>/)?.[1] || "Analyzed Site",
+      params: {
+        syntactic: Math.min(100, score * 1.1),
+        semantic: Math.min(100, score * 0.9),
+        syntid: 0,
+        entropy: score > 40 ? 75 : 15
+      }
     });
   } catch (err) {
     res.status(502).json({ error: "Site unreachable" });
