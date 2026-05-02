@@ -228,22 +228,16 @@ export default function App() {
 
   const handleScan = async (input: string) => {
     if (!input || input.length < 5) return;
-    
     setStatus('scanning');
     setPercentage(0);
     
-    // Smooth progress simulation
     const interval = setInterval(() => {
-      setPercentage(prev => {
-        if (prev >= 98) return 98;
-        return prev + (Math.random() * 8);
-      });
+      setPercentage(prev => Math.min(95, prev + Math.random() * 5));
     }, 150);
 
     try {
-      const isUrl = input.startsWith('http');
-      const endpoint = isUrl ? '/api/scan-site' : '/api/analyze';
-      const body = isUrl ? { url: input } : { content: input, type: 'text' };
+      const endpoint = mode === 'website' ? '/api/scan-site' : '/api/analyze';
+      const body = mode === 'website' ? { url: input } : { content: input };
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -251,25 +245,24 @@ export default function App() {
         body: JSON.stringify(body)
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "API Scan Failed");
+      // API hatası durumunda HTML dönmesini (404/500) engelleyen kontrol
+      const contentType = response.headers.get("content-type");
+      if (!response.ok || !contentType?.includes("application/json")) {
+        throw new Error(t.errors?.fetch || "Sunucu hatası: Lütfen daha sonra tekrar deneyin.");
       }
 
       const data = await response.json();
       
       clearInterval(interval);
       setPercentage(100);
-      
       await new Promise(r => setTimeout(r, 600));
-      
       setScore(data.score);
       setStatus('done');
     } catch (error: any) {
       console.error("Scan Error:", error);
       setStatus('idle');
       clearInterval(interval);
-      alert(error.message || "Could not complete the scan. Please try again.");
+      alert(error.message || "Doğrulama sistemi şu an çevrimdışı. Lütfen bağlantınızı kontrol edin.");
     }
   };
 
@@ -437,7 +430,7 @@ export default function App() {
                     >
                        <div className="space-y-4">
                          <label className="text-xs font-bold text-[var(--muted)] uppercase tracking-widest">{t.scanner.urlLabel}</label>
-                         <div className="flex gap-4">
+                         <div className="flex flex-col sm:flex-row gap-4">
                             <div className="flex-1 h-16 rounded-2xl border border-[var(--border)] bg-[var(--card)] px-6 flex items-center gap-4 focus-within:border-[var(--foreground)] transition-colors">
                               <Globe className="w-5 h-5 text-[var(--muted)]" />
                               <input 
@@ -445,19 +438,25 @@ export default function App() {
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                                 placeholder={t.scanner.urlPlaceholder}
-                                className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-lg font-medium"
+                                className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-base sm:text-lg font-medium"
                               />
                             </div>
                             <button 
-                              onClick={() => handleScan(url)}
+                              onClick={() => {
+                                let formattedUrl = url.trim();
+                                if (formattedUrl && !formattedUrl.startsWith('http')) {
+                                  formattedUrl = 'https://' + formattedUrl;
+                                }
+                                handleScan(formattedUrl);
+                              }}
                               disabled={!url.includes('.') || status === 'scanning'}
-                              className="h-16 px-10 rounded-2xl bg-[var(--foreground)] text-[var(--background)] font-bold text-sm tracking-widest uppercase transition-all hover:opacity-90 disabled:opacity-20"
+                              className="h-16 px-8 sm:px-10 rounded-2xl bg-[var(--foreground)] text-[var(--background)] font-bold text-sm tracking-widest uppercase transition-all hover:opacity-90 disabled:opacity-20 flex-shrink-0"
                             >
                               {t.scanner.urlBtn}
                             </button>
                          </div>
                        </div>
-                       <div className="grid grid-cols-2 gap-4">
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--card)] space-y-3">
                              <Laptop className="w-5 h-5 text-[var(--muted)]" />
                              <p className="text-sm font-bold uppercase tracking-wider">{t.scanner.framework}</p>
